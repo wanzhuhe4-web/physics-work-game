@@ -212,9 +212,9 @@ with st.sidebar:
         help="0.1: 真实纪录片\n1.0: 黑色幽默\n1.5: 荒诞现实主义"
     )
     
-    st.write(f"当前轮次: **{st.session_state.round_count}** / 16")
+    st.write(f"当前轮次: **{st.session_state.round_count}** / 1")
     
-    days_left = 6 - int(st.session_state.round_count / 2)
+    days_left = 16 - int(st.session_state.round_count / 2)
     st.metric("距离房贷扣款日", f"{days_left} 天", delta="余额不足", delta_color="inverse")
     
     st.divider()
@@ -325,6 +325,7 @@ else:
         if cols[2].button("C", use_container_width=True): handle_action("C", "ACTION"); st.rerun()
         if prompt := st.chat_input("自定义操作 (例：默默打开知乎搜索‘博士送外卖’)...", key="normal_input"):
             handle_action(prompt, "ACTION"); st.rerun()
+
 
 
 
