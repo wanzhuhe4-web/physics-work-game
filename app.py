@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # 你的身份是**“非升即走考核制度的化身”**。
-# 玩家是一名物理学青年教师（青椒），姓祝，处于 Tenure-track（预聘期）最痛苦的阶段。
+# 玩家是一名物理学青年教师（青椒），处于 Tenure-track（预聘期）最痛苦的阶段。
 # --- 2. 核心系统指令 ---
 PHYSICS_SYSTEM_PROMPT = """
 你是一款名为《物理学青椒新春渡劫》的文字 RPG 引擎。
@@ -328,6 +328,7 @@ else:
         if cols[2].button("C", use_container_width=True): handle_action("C", "ACTION"); st.rerun()
         if prompt := st.chat_input("自定义操作 (例：默默打开知乎搜索‘博士送外卖’)...", key="normal_input"):
             handle_action(prompt, "ACTION"); st.rerun()
+
 
 
 
