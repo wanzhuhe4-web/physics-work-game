@@ -19,7 +19,7 @@ PHYSICS_SYSTEM_PROMPT = """
 # ⚡ 语言风格 (春节凡尔赛版 - 沉浸式)
 1. **财富羞辱**：通过亲戚的话语，强调“你虽然是博士，但工资不如送外卖的表弟”。
 2. **环境描写**：多描写春节嘈杂、油腻的环境（如：满地瓜子皮、震耳欲聋的麻将声、亲戚嘴角的油光），与你内心的高冷物理世界形成反差。
-3. **细节描写**：剧情描述控制在 **200 字左右**。不要记流水账，要写出具体的对话和心理活动。
+3. **细节描写**：剧情描述控制在 **150 字左右**。不要记流水账，要写出具体的对话和心理活动。
 
 # 核心数值 (每轮更新)
 | 属性 | 当前值 | 物理学/社会学定义 |
@@ -101,7 +101,7 @@ def handle_action(action_text, input_type="ACTION", display_text=None):
     field = st.session_state.get("field", "理论物理")
     
     if input_type == "QUIZ_ANSWER":
-        prompt = f"[ANSWER_QUIZ]: 我选了 {action_text}。请判定我对亲戚的科普是否成功（通常是失败，因为他们只信抖音）。请用200字左右详细描写亲戚的反驳神态，然后恢复剧情，给出 A/B/C 选项。"
+        prompt = f"[ANSWER_QUIZ]: 我选了 {action_text}。请判定我对亲戚的科普是否成功（通常是失败，因为他们只信抖音）。请用150字左右详细描写亲戚的反驳神态，然后恢复剧情，给出 A/B/C 选项。"
     
     elif input_type == "REBUTTAL":
         prompt = f"[GRADE: REBUTTAL]: {action_text}。请判定银行/人事处是否宽限了我的死线，然后恢复剧情，给出 A/B/C 选项。"
@@ -111,10 +111,10 @@ def handle_action(action_text, input_type="ACTION", display_text=None):
             prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。**生存危机**。请触发房贷扣款失败，或者学院通知聘期考核不合格。使用标签 `[EVENT: BOSS_BATTLE]`。**不要**给选项。)"
             st.session_state.mode = "BOSS"
         elif is_quiz_round:
-            prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。**民科对线**。亲戚提出了基于{field}的荒谬养生/致富理论。请用200字左右生动描写场景，使用标签 `[EVENT: QUIZ]` 并出单选题。)"
+            prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。**民科对线**。亲戚提出了基于{field}的荒谬养生/致富理论。请用150字左右生动描写场景，使用标签 `[EVENT: QUIZ]` 并出单选题(A/B/C)。)"
             st.session_state.mode = "QUIZ"
         else:
-            prompt = f"{action_text} (请用 200 字左右丰富细腻地描写同学聚会炫富、亲戚问工资等场景，重点描写环境细节和人物神态，强调物理青椒的贫穷，并给出 A/B/C 剧情选项)"
+            prompt = f"{action_text} (请用 150 字左右丰富细腻地描写同学聚会炫富、亲戚问工资等场景，重点描写环境细节和人物神态，强调物理青椒的贫穷，并给出 A/B/C 剧情选项)"
             st.session_state.mode = "NORMAL"
 
     # 4. AI 推演
@@ -244,15 +244,15 @@ else:
         
         col_q1, col_q2, col_q3 = st.columns(3)
         with col_q1:
-            if st.button("🅰️ 从拉格朗日量开始推导", use_container_width=True): 
+            if st.button("🅰️ ", use_container_width=True): 
                 handle_action("A", "QUIZ_ANSWER")
                 st.rerun()
         with col_q2:
-            if st.button("🅱️ 笑着点头：“您说得对”", use_container_width=True): 
+            if st.button("🅱️ ”", use_container_width=True): 
                 handle_action("B", "QUIZ_ANSWER")
                 st.rerun()
         with col_q3:
-            if st.button("©️ 推荐他买更贵的智商税", use_container_width=True): 
+            if st.button("©️ ", use_container_width=True): 
                 handle_action("C", "QUIZ_ANSWER")
                 st.rerun()
 
@@ -265,3 +265,4 @@ else:
         if cols[2].button("C", use_container_width=True): handle_action("C", "ACTION"); st.rerun()
         if prompt := st.chat_input("自定义操作 (例：默默打开知乎搜索‘博士送外卖’)..."):
             handle_action(prompt, "ACTION"); st.rerun()
+
