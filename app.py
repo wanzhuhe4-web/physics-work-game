@@ -5,14 +5,14 @@ import re
 
 # --- 1. 页面配置 ---
 st.set_page_config(
-    page_title="物理学生存模拟：从入门到入土", 
+    page_title="物理学青椒生存模拟：从入门到入土", 
     page_icon="⚗️", 
     layout="wide"
 )
 
 # --- 2. 核心系统指令 ---
 PHYSICS_SYSTEM_PROMPT = """
-你是一款名为《物理生存模拟：熵增地狱》的文字 RPG 引擎。
+你是一款名为《物理学青椒生存模拟》的文字 RPG 引擎。
 你的身份是**“学术界的墨菲定律化身”**。
 
 # ⚡ 语言风格 (严格执行)
@@ -286,4 +286,5 @@ else:
         if cols[2].button("C", use_container_width=True): handle_action("C", "ACTION"); st.rerun()
         if prompt := st.chat_input("自定义作死操作..."):
             handle_action(prompt, "ACTION"); st.rerun()
+
 
