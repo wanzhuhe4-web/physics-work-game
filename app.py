@@ -97,7 +97,7 @@ def get_ai_response(prompt, backend, temperature):
     except Exception as e:
         return f"🚨 API Error: {str(e)}"
 
-# --- 5. 核心动作处理 ---
+# --- 5. 核心动作处理 (修复结局判定逻辑) ---
 def handle_action(action_text, input_type="ACTION", display_text=None):
     # 1. 记录用户输入
     prefix_map = {
@@ -111,12 +111,11 @@ def handle_action(action_text, input_type="ACTION", display_text=None):
     if input_type == "ACTION":
         st.session_state.round_count += 1
     
-    # --- 关键修复 1: 状态重置 ---
-    # 只要用户提交了答题或回复，下一轮默认先回到 NORMAL 状态等待 AI 判决
+    # 状态重置
     if input_type in ["QUIZ_ANSWER", "REBUTTAL"]:
         st.session_state.mode = "NORMAL"
 
-    # 2. 预判逻辑 (决定提示词)
+    # 2. 预判逻辑
     is_quiz_trigger = False
     is_boss_trigger = False
     
@@ -127,26 +126,33 @@ def handle_action(action_text, input_type="ACTION", display_text=None):
             elif st.session_state.round_count % 3 == 0:
                 is_quiz_trigger = True
 
-    # 3. Prompt 构建
+    # 3. Prompt 构建 (核心修改区域)
     field = st.session_state.get("field", "理论物理")
     prompt = ""
     
+    # 通用的结局检查后缀：告诉 AI 每一轮都要检查数值
+    game_over_check_instruction = " (⚠️重要：回复前请先检查数值。如果【学术尊严<=0】或【钱包熵值Max】或【KPI>=100%】，请忽略其他指令，直接输出标签 `[GAME_OVER: SUCCESS]` 或 `[GAME_OVER: FAILURE]` 并撰写结局报告。否则继续执行：)"
+
     if input_type == "QUIZ_ANSWER":
-        prompt = f"[ANSWER_QUIZ]: 我选了 {action_text}。请判定我对亲戚的科普是否成功。请用150字描写亲戚的反驳神态。然后恢复剧情，给出 A/B/C 选项。"
+        prompt = f"[ANSWER_QUIZ]: 我选了 {action_text}。请判定科普是否成功。{game_over_check_instruction} 若未结束，请用150字描写亲戚神态，恢复剧情，给出 A/B/C 选项。"
     
     elif input_type == "REBUTTAL":
-        prompt = f"[GRADE: REBUTTAL]: {action_text}。请判定银行/人事处是否宽限了死线。然后恢复剧情，给出 A/B/C 选项。"
+        prompt = f"[GRADE: REBUTTAL]: {action_text}。请判定死线是否宽限。{game_over_check_instruction} 若未结束，恢复剧情，给出 A/B/C 选项。"
     
     else:
-        # 强制结束检查
+        # 强制轮次结束
         if st.session_state.round_count >= 15:
              prompt = f"{action_text} (系统指令：已达到最大轮次。请根据当前数值，直接生成最终结局。必须使用标签 `[GAME_OVER: SUCCESS]` 或 `[GAME_OVER: FAILURE]`，并给出总结报告。)"
+        
         elif is_boss_trigger:
-            prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。触发**生存危机**。请使用标签 `[EVENT: BOSS_BATTLE]`。**不要**给选项。)"
+            prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。{game_over_check_instruction} 若未结束，触发**生存危机**，使用标签 `[EVENT: BOSS_BATTLE]`，不要给选项。)"
+        
         elif is_quiz_trigger:
-            prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。触发**民科对线**。请使用标签 `[EVENT: QUIZ]` 并出单选题。)"
+            prompt = f"{action_text} (系统指令：本轮是第 {st.session_state.round_count} 轮。{game_over_check_instruction} 若未结束，触发**民科对线**，使用标签 `[EVENT: QUIZ]` 并出单选题。)"
+        
         else:
-            prompt = f"{action_text} (请用 150 字描写物理青椒的贫穷与亲戚的炫富，并给出 A/B/C 剧情选项。)"
+            # 常规剧情：必须加上结局检查指令
+            prompt = f"{action_text} (系统指令：{game_over_check_instruction} 若未结束，用 150 字描写物理青椒的窘迫，并给出 A/B/C 剧情选项。)"
 
     # 4. AI 推演
     loading_text = {
@@ -158,15 +164,18 @@ def handle_action(action_text, input_type="ACTION", display_text=None):
     backend = st.session_state.get("backend_selection", "Google AI Studio (Gemini)")
     temperature = st.session_state.get("temperature_setting", 1.0)
 
-    # 在请求时显示当前的 mode 状态作为 loading 提示
     current_loading = loading_text.get(st.session_state.mode, "Loading...")
     with st.spinner(f"[{backend}] {current_loading}"):
         res = get_ai_response(prompt, backend, temperature)
     
-    # 5. 逻辑检测 (根据 AI 响应动态更新 Mode)
-    if "[GAME_OVER:" in res:
+    # 5. 逻辑检测
+    # 增加一点鲁棒性：有时候 AI 会忘记冒号，或者大小写不一致
+    if "[GAME_OVER" in res: 
         st.session_state.is_over = True
-        st.session_state.final_report = re.sub(r"\[GAME_OVER:.*?\]", "", res).strip()
+        # 提取报告文本
+        clean_report = re.sub(r"\[GAME_OVER.*?\]", "", res).strip()
+        st.session_state.final_report = clean_report
+        
         if "SUCCESS" in res: st.session_state.ending_type = "SUCCESS"
         else: st.session_state.ending_type = "FAILURE"
     
@@ -179,7 +188,7 @@ def handle_action(action_text, input_type="ACTION", display_text=None):
     
     # 清洗文本用于展示
     clean_res = res
-    clean_res = re.sub(r"\[GAME_OVER:.*?\]", "", clean_res)
+    clean_res = re.sub(r"\[GAME_OVER.*?\]", "", clean_res) # 对应的正则也要改宽泛一点
     clean_res = clean_res.replace("[EVENT: BOSS_BATTLE]", "")
     clean_res = clean_res.replace("[EVENT: QUIZ]", "")
     clean_res = clean_res.strip()
@@ -203,7 +212,7 @@ with st.sidebar:
         help="0.1: 真实纪录片\n1.0: 黑色幽默\n1.5: 荒诞现实主义"
     )
     
-    st.write(f"当前轮次: **{st.session_state.round_count}** / 15")
+    st.write(f"当前轮次: **{st.session_state.round_count}** / 16")
     
     days_left = 6 - int(st.session_state.round_count / 2)
     st.metric("距离房贷扣款日", f"{days_left} 天", delta="余额不足", delta_color="inverse")
@@ -316,6 +325,7 @@ else:
         if cols[2].button("C", use_container_width=True): handle_action("C", "ACTION"); st.rerun()
         if prompt := st.chat_input("自定义操作 (例：默默打开知乎搜索‘博士送外卖’)...", key="normal_input"):
             handle_action(prompt, "ACTION"); st.rerun()
+
 
 
 
