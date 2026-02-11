@@ -63,7 +63,7 @@ def get_ai_response(prompt, backend, temperature):
     try:
         if backend == "Google AI Studio (Gemini)":
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            model = genai.GenerativeModel(model_name="gemini-2.0-flash", system_instruction=PHYSICS_SYSTEM_PROMPT)
+            model = genai.GenerativeModel(model_name="gemini-2.5-pro", system_instruction=PHYSICS_SYSTEM_PROMPT)
             if "gemini_chat" not in st.session_state: st.session_state.gemini_chat = model.start_chat(history=[])
             return st.session_state.gemini_chat.send_message(prompt, generation_config={"temperature": temperature}).text
         else:
@@ -295,6 +295,7 @@ else:
         # 增加 key
         if prompt := st.chat_input("自定义操作 (例：默默打开知乎搜索‘博士送外卖’)...", key="normal_input"):
             handle_action(prompt, "ACTION"); st.rerun()
+
 
 
 
