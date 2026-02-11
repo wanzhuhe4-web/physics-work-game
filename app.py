@@ -239,8 +239,7 @@ else:
 
     # Mode 2: Quiz (Pseudoscience)
     elif st.session_state.mode == "QUIZ":
-        st.warning("🧩 **民科亲戚发起了攻击！**")
-        st.caption("面对“量子鞋垫”或“水氢发动机”的言论，你决定：")
+        st.caption("面对这些的言论，你决定：")
         
         col_q1, col_q2, col_q3 = st.columns(3)
         with col_q1:
@@ -248,7 +247,7 @@ else:
                 handle_action("A", "QUIZ_ANSWER")
                 st.rerun()
         with col_q2:
-            if st.button("🅱️ ”", use_container_width=True): 
+            if st.button("🅱️ ", use_container_width=True): 
                 handle_action("B", "QUIZ_ANSWER")
                 st.rerun()
         with col_q3:
@@ -265,5 +264,6 @@ else:
         if cols[2].button("C", use_container_width=True): handle_action("C", "ACTION"); st.rerun()
         if prompt := st.chat_input("自定义操作 (例：默默打开知乎搜索‘博士送外卖’)..."):
             handle_action(prompt, "ACTION"); st.rerun()
+
 
 
